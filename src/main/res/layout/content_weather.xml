@@ -19,10 +19,55 @@
         android:columnWidth="80dp"
         android:stretchMode="columnWidth">
     </GridView>
+
+        <TextView
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/weather_gridview"
+            android:id="@+id/weather_cityName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:text="CityNameText"/>
+        <TextView
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/weather_cityName"
+            android:id="@+id/weather_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CityDateText"/>
+    <ImageView
+        android:layout_toLeftOf="@id/weather_cityName"
+        android:layout_below="@id/weather_date"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/weather_pic"
+        android:layout_width="50dp"
+        android:layout_height="50dp" />
+
     <TextView
-        android:layout_below="@id/weather_gridview"
-        android:id="@+id/weather_text"
+        android:textSize="50sp"
+        android:layout_toRightOf="@id/weather_pic"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/weather_date"
+        android:id="@+id/weather_temp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="25 °C"/>
+
+
+
+    <ScrollView
+        android:layout_below="@id/weather_temp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content">
+
+        <TextView
+
+            android:id="@+id/weather_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </ScrollView>
+
+
 
 </RelativeLayout>

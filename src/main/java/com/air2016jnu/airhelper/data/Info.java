@@ -12,6 +12,8 @@ public class Info {
     private static String UserCityKey="UserCity";
 
     public static String weatherIsOk="WEATHER_RES_OK";
+    public static String JosnBackOk="ok";
+    public static String cityIsWrong="unknown city";
 
     public static String getWeatherKey(){
         return weatherKey;

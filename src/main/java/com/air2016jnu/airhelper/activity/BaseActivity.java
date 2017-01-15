@@ -48,6 +48,14 @@ public  abstract class BaseActivity extends AppCompatActivity {
             }
         });
          rButton = (Button)findViewById(R.id.title_bar_btn_r);
+         rButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View v) {
+                 if (rBtnAction!=null){
+                     rBtnAction.act();
+                 }
+             }
+         });
         textTitle = (TextView)findViewById(R.id.title_bar_title);
     }
     public void setActivityTitle(String title){
@@ -66,6 +74,9 @@ public  abstract class BaseActivity extends AppCompatActivity {
      }
     public void setlBtnActionAction(ButtonAction action){
         lBtnAction=action;
+    }
+    public void setrBtnActionAction(ButtonAction action){
+        rBtnAction=action;
     }
 
 
