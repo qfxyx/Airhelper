@@ -122,6 +122,7 @@ public class WeatherActivity extends BaseActivity{
                 changeCityDialog();
             }
         });
+        setActivityTitle("在线天气");
         cityName=(TextView)findViewById(R.id.weather_cityName);
         dateText=(TextView)findViewById(R.id.weather_date);
         temperature=(TextView)findViewById(R.id.weather_temp);

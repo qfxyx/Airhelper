@@ -82,8 +82,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.air_condition) {
-            // Handle the camera action
-            Toast.makeText(this,"test1",Toast.LENGTH_SHORT).show();
+         startActivity(new Intent(MainActivity.this,AirQualityActivity.class));
         } else if (id == R.id.tem_condition) {
             Toast.makeText(this,"test2",Toast.LENGTH_SHORT).show();
         } else if (id == R.id.humidity_condition) {
@@ -112,9 +111,12 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "更新中...", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
                 setTemperture();
+                if(!checkBluetooth()){
+
+                    startActivity(new Intent(MainActivity.this,BluetoothActivity.class));
+                }
+
             }
         });
 
@@ -196,6 +198,10 @@ public class MainActivity extends AppCompatActivity
         String res = "温度："+temperture+"℃\n"+"湿度："+humitity+"%\n"+"空气质量："
                 +quality;
         tView.setText(res);
+
+    }
+    private boolean checkBluetooth(){
+        return false;
 
     }
 }
