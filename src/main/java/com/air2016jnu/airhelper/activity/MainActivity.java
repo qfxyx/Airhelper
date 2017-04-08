@@ -1,7 +1,15 @@
 package com.air2016jnu.airhelper.activity;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
@@ -21,6 +29,8 @@ import com.air2016jnu.airhelper.R;
 import com.air2016jnu.airhelper.data.ConfigurationHelper;
 import com.air2016jnu.airhelper.data.Info;
 import com.air2016jnu.airhelper.data.URLData;
+import com.air2016jnu.airhelper.service.BluetoothLeService;
+import com.air2016jnu.airhelper.service.ExcuteBluetoothService;
 import com.air2016jnu.airhelper.utils.HttpWeather;
 
 import org.w3c.dom.Text;
@@ -32,14 +42,22 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     Random random = new Random();
     TextView tView ;
-
+    private String bleName="" ;
+    private String bleAddress="" ;
+    private String targetBleName = "BT05";
+    private String showString = "";
+    int REQUEST_ENABLE_BT = 1;
+    BluetoothAdapter mBluetoothAdapter;
+    private Handler mHandler ;
+    // 蓝牙扫描时间
+    private static final long SCAN_PERIOD = 10000;
+    private int tipsControl = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
         initAppData();
-        setDate();
 
     }
 
@@ -68,7 +86,8 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.menu_bluetooth) {
+            startActivity(new Intent(this,BluetoothActivity.class));
             return true;
         }
 
@@ -84,7 +103,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.air_condition) {
          startActivity(new Intent(MainActivity.this,AirQualityActivity.class));
         } else if (id == R.id.tem_condition) {
-            Toast.makeText(this,"test2",Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(MainActivity.this,TemperatureActivity.class));
         } else if (id == R.id.humidity_condition) {
 
 
@@ -111,12 +130,9 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setTemperture();
-                if(!checkBluetooth()){
-
-                    startActivity(new Intent(MainActivity.this,BluetoothActivity.class));
-                }
-
+                Intent intent = new Intent(BluetoothLeService.SEND_DATA);
+                intent.putExtra("sendToBle","#H");
+               sendBroadcast(intent);
             }
         });
 
@@ -133,7 +149,15 @@ public class MainActivity extends AppCompatActivity
     private void initAppData(){
         HttpWeather weather = new HttpWeather(Info.getUserCity(), URLData.getWeather());
         weather.getWeatherJson(Info.getWeatherAllKey());
+        mHandler = new Handler();
+        registerReceiver(mGattUpdateReceiver,makeGattUpdateIntentFilter());
+        if (initBle()){
+            scanLeDevice();
+        }
+
     }
+
+    /*
     private void setDate(){
         Calendar calendar =Calendar.getInstance();
         int date =calendar.get(Calendar.DATE);
@@ -199,9 +223,139 @@ public class MainActivity extends AppCompatActivity
                 +quality;
         tView.setText(res);
 
-    }
-    private boolean checkBluetooth(){
-        return false;
+    } */
 
+    private boolean initBle(){
+        // 手机硬件支持蓝牙
+        if (!getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_BLUETOOTH_LE))
+        {
+            Toast.makeText(this, "不支持BLE", Toast.LENGTH_SHORT).show();
+         return false ;
+        }
+        // Initializes Bluetooth adapter.
+        // 获取手机本地的蓝牙适配器
+        final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothAdapter = bluetoothManager.getAdapter();
+        // 打开蓝牙权限
+        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled())
+        {
+            Intent enableBtIntent = new Intent(
+                    BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+        return true ;
     }
+    /**
+     * 蓝牙扫描回调函数 实现扫描蓝牙设备，回调蓝牙BluetoothDevice，可以获取name MAC等信息
+     *
+     * **/
+    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback()
+    {
+
+        @Override
+        public void onLeScan(final BluetoothDevice device, final int rssi,
+                             byte[] scanRecord)
+        {
+            // TODO Auto-generated method stub
+            System.out.println("Address:" + device.getAddress());
+            System.out.println("Name:" + device.getName());
+            System.out.println("rssi:" + rssi);
+
+            if (device.getName().equals(targetBleName)){
+                bleName = device.getName();
+                bleAddress = device.getAddress();
+                Intent intent = new Intent(MainActivity.this, ExcuteBluetoothService.class);
+                intent.putExtra("address",bleAddress);
+                System.out.println("发现目标设备，尝试进行自动连接");
+                startService(intent);
+                if (tipsControl==0){
+                    showTips("发现目标设备，尝试进行自动连接",Toast.LENGTH_SHORT);
+                }
+                tipsControl++;
+
+            }
+
+        }
+    };
+
+    private void scanLeDevice() {
+            // Stops scanning after a pre-defined scan period.
+            mHandler.postDelayed(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    Log.i("SCAN", "stop.....................");
+                    Log.i("stopExcute", "stop.........stop............");
+                    if (bleName.isEmpty()|bleName.equals("")){
+                      //  showTips("没有扫描到设备，请点击右上角进入手动扫描页面",Toast.LENGTH_LONG);
+                    }
+                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                }
+            }, SCAN_PERIOD);
+			/* 开始扫描蓝牙设备，带mLeScanCallback 回调函数 */
+            Log.i("SCAN", "begin.....................");
+            Log.i("StartExcute", "start.........start............");
+            mBluetoothAdapter.startLeScan(mLeScanCallback);
+        }
+    private void showTips(String tips,int time){
+        Toast.makeText(MainActivity.this,tips,time).show();
+    }
+    /**
+     * 广播接收器，负责接收BluetoothLeService类发送的数据
+     */
+    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            final String action = intent.getAction();
+            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action))//Gatt连接成功
+            {
+
+                //更新连接状态
+                //updateConnectionState(status);
+                System.out.println("BroadcastReceiver :" + "device connected");
+
+            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED//Gatt连接失败
+                    .equals(action))
+            {
+
+                //更新连接状态
+                // updateConnectionState(status);
+                System.out.println("BroadcastReceiver :"
+                        + "device disconnected");
+
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED//发现GATT服务器
+                    .equals(action))
+            {
+
+            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action))//有效数据
+            {
+                //处理发送过来的数据
+                showString=showString+intent.getExtras().getString(BluetoothLeService.EXTRA_DATA);
+                tView.setText(showString);
+
+            }
+        }
+    };
+    /* 意图过滤器 */
+    private static IntentFilter makeGattUpdateIntentFilter()
+    {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter
+                .addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.SEND_DATA);
+        return intentFilter;
+    }
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        unregisterReceiver(mGattUpdateReceiver);
+    }
+
 }

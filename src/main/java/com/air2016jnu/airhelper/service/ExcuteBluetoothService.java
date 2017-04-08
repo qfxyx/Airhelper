@@ -1,6 +1,6 @@
-package com.air2016jnu.airhelper.activity;
+package com.air2016jnu.airhelper.service;
 
-import android.app.Activity;
+import android.app.Service;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
@@ -13,31 +13,22 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.air2016jnu.airhelper.R;
-import com.air2016jnu.airhelper.service.BluetoothLeService;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * Created by Administrator on 2017/4/1.
- */
-public class  BluetoothSendActivity extends Activity implements View.OnClickListener {
-
-    private final static String TAG =  BluetoothSendActivity.class.getSimpleName();
+public class ExcuteBluetoothService extends Service {
     public static String HEART_RATE_MEASUREMENT = "0000ffe1-0000-1000-8000-00805f9b34fb";
     public static String EXTRAS_DEVICE_NAME = "DEVICE_NAME";;
     public static String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static String EXTRAS_DEVICE_RSSI = "RSSI";
+
     //蓝牙连接状态
     private boolean mConnected = false;
     private String status = "disconnected";
@@ -51,106 +42,32 @@ public class  BluetoothSendActivity extends Activity implements View.OnClickList
     private String rev_str = "";
     //蓝牙service,负责后台的蓝牙服务
     private static BluetoothLeService mBluetoothLeService;
-    //文本框，显示接受的内容
-    private TextView rev_tv, connect_state;
-    //发送按钮
-    private Button send_btn;
-    //文本编辑框
-    private EditText send_et;
-    private ScrollView rev_sv;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     //蓝牙特征值
     private static BluetoothGattCharacteristic target_chara = null;
     private Handler mhandler = new Handler();
-    private Handler myHandler = new Handler()
-    {
-        // 2.重写消息处理函数
-        public void handleMessage(Message msg)
-        {
-            switch (msg.what)
-            {
-                // 判断发送的消息
-                case 1:
-                {
-                    // 更新View
-                    String state = msg.getData().getString("connect_state");
-                    connect_state.setText(state);
-
-                    break;
-                }
-
-            }
-            super.handleMessage(msg);
-        }
-
-    };
+    public ExcuteBluetoothService() {
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
-        // TODO Auto-generated method stub
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.ble_send_activity);
-        b = getIntent().getExtras();
-        //从意图获取显示的蓝牙信息
-        mDeviceName = b.getString(EXTRAS_DEVICE_NAME);
-        mDeviceAddress = b.getString(EXTRAS_DEVICE_ADDRESS);
-        mRssi = b.getString(EXTRAS_DEVICE_RSSI);
+    public int onStartCommand(Intent intent, int flags, int startId){
 
+        int retVal = super.onStartCommand(intent, flags, startId);
+        b = intent.getExtras();
+        //从意图获取显示的蓝牙信息
+        //mDeviceName = b.getString(EXTRAS_DEVICE_NAME);
+        mDeviceAddress = intent.getStringExtra("address");
+        //mRssi = b.getString(EXTRAS_DEVICE_RSSI);
+        System.out.println("启动中间服务成功！尝试启动蓝牙服务，蓝牙地址为："+mDeviceAddress);
 		/* 启动蓝牙service */
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         gattServiceIntent.putExtra("address",mDeviceAddress);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
         startService(gattServiceIntent);
-
-        init();
-
-    }
-
-    @Override
-    protected void onDestroy()
-    {
-        super.onDestroy();
-        //解除广播接收器
-        unregisterReceiver(mGattUpdateReceiver);
-        mBluetoothLeService = null;
-        unbindService(mServiceConnection);
-    }
-
-    // Activity出来时候，绑定广播接收器，监听蓝牙连接服务传过来的事件
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-        //绑定广播接收器
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-        if (mBluetoothLeService != null)
-        {
-            //根据蓝牙地址，建立连接
-            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
-            Log.d(TAG, "Connect request result=" + result);
-        }
-    }
-
-    /**
-     * @Title: init
-     * @Description: TODO(初始化UI控件)
-     * @param  无
-     * @return void
-     * @throws
-     */
-    private void init()
-    {
-        rev_sv = (ScrollView) this.findViewById(R.id.rev_sv);
-        rev_tv = (TextView) this.findViewById(R.id.rev_tv);
-        connect_state = (TextView) this.findViewById(R.id.connect_state);
-        send_btn = (Button) this.findViewById(R.id.send_btn);
-        send_et = (EditText) this.findViewById(R.id.send_et);
-        connect_state.setText(status);
-        send_btn.setOnClickListener(this);
+        registerReceiver(mGattUpdateReceiver,makeGattUpdateIntentFilter());
+        return retVal;
 
     }
-
     /* BluetoothLeService绑定的回调函数 */
     private final ServiceConnection mServiceConnection = new ServiceConnection()
     {
@@ -163,8 +80,9 @@ public class  BluetoothSendActivity extends Activity implements View.OnClickList
                     .getService();
             if (!mBluetoothLeService.initialize())
             {
-                Log.e(TAG, "Unable to initialize Bluetooth");
-                finish();
+               // Log.e(TAG, "Unable to initialize Bluetooth");
+                System.out.println("中间服务:蓝牙服务初始化未准备好！");
+
             }
             // Automatically connects to the device upon successful start-up
             // initialization.
@@ -185,63 +103,50 @@ public class  BluetoothSendActivity extends Activity implements View.OnClickList
      * 广播接收器，负责接收BluetoothLeService类发送的数据
      */
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver()
-            {
-                @Override
-                public void onReceive(Context context, Intent intent)
-                {
-                    final String action = intent.getAction();
-                    if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action))//Gatt连接成功
-                    {
-                        mConnected = true;
-                        status = "connected";
-                        //更新连接状态
-                        updateConnectionState(status);
-                        System.out.println("BroadcastReceiver :" + "device connected");
-
-                    } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED//Gatt连接失败
-                            .equals(action))
-                    {
-                        mConnected = false;
-                        status = "disconnected";
-                        //更新连接状态
-                        updateConnectionState(status);
-                        System.out.println("BroadcastReceiver :"
-                                + "device disconnected");
-
-                    } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED//发现GATT服务器
-                            .equals(action))
-                    {
-                        // Show all the supported services and characteristics on the
-                        // user interface.
-                        //获取设备的所有蓝牙服务
-                        displayGattServices(mBluetoothLeService
-                                .getSupportedGattServices());
-                        System.out.println("BroadcastReceiver :"
-                                + "device SERVICES_DISCOVERED");
-                    } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action))//有效数据
-                    {
-                        //处理发送过来的数据
-                        displayData(intent.getExtras().getString(BluetoothLeService.EXTRA_DATA));
-                        System.out.println("BroadcastReceiver onData:"
-                                + intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-                    }
-                }
-            };
-
-    /* 更新连接状态 */
-    private void updateConnectionState(String status)
     {
-        Message msg = new Message();
-        msg.what = 1;
-        Bundle b = new Bundle();
-        b.putString("connect_state", status);
-        msg.setData(b);
-        //将连接状态更新的UI的textview上
-        myHandler.sendMessage(msg);
-        System.out.println("connect_state:" + status);
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            final String action = intent.getAction();
+            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action))//Gatt连接成功
+            {
+                mConnected = true;
+                status = "connected";
+                //更新连接状态
+                //updateConnectionState(status);
+                System.out.println("BroadcastReceiver :" + "device connected");
 
-    }
+            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED//Gatt连接失败
+                    .equals(action))
+            {
+                mConnected = false;
+                status = "disconnected";
+                //更新连接状态
+                // updateConnectionState(status);
+                System.out.println("BroadcastReceiver :"
+                        + "device disconnected");
 
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED//发现GATT服务器
+                    .equals(action))
+            {
+                // Show all the supported services and characteristics on the
+                // user interface.
+                //获取设备的所有蓝牙服务
+                displayGattServices(mBluetoothLeService
+                        .getSupportedGattServices());
+                System.out.println("BroadcastReceiver :"
+                        + "device SERVICES_DISCOVERED");
+            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action))//有效数据
+            {
+                //处理发送过来的数据
+                //displayData(intent.getExtras().getString(BluetoothLeService.EXTRA_DATA));
+                System.out.println("BroadcastReceiver onData:"
+                        + intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+            }else if (BluetoothLeService.SEND_DATA.equals(action)){
+                sendMessage(intent.getExtras().getString("sendToBle"));
+            }
+        }
+    };
     /* 意图过滤器 */
     private static IntentFilter makeGattUpdateIntentFilter()
     {
@@ -251,39 +156,9 @@ public class  BluetoothSendActivity extends Activity implements View.OnClickList
         intentFilter
                 .addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.SEND_DATA);
         return intentFilter;
     }
-
-    /**
-     * @Title: displayData
-     * @Description: TODO(接收到的数据在scrollview上显示)
-     * @param @param rev_string(接受的数据)
-     * @return void
-     * @throws
-     */
-    private void displayData(String rev_string)
-    {
-        rev_str += rev_string;
-        runOnUiThread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                rev_tv.setText(rev_str);
-                rev_sv.scrollTo(0, rev_tv.getMeasuredHeight());
-                System.out.println("rev:" + rev_str);
-            }
-        });
-
-    }
-
-    /**
-     * @Title: displayGattServices
-     * @Description: TODO(处理蓝牙服务)
-     * @param 无
-     * @return void
-     * @throws
-     */
     private void displayGattServices(List<BluetoothGattService> gattServices)
     {
 
@@ -379,24 +254,30 @@ public class  BluetoothSendActivity extends Activity implements View.OnClickList
 
     }
 
-    /*
-     * 发送按键的响应事件，主要发送文本框的数据
-     */
+
+
     @Override
-    public void onClick(View v)
-    {
-        // TODO Auto-generated method stub
-        target_chara.setValue(send_et.getText().toString());
-        //调用蓝牙服务的写特征值方法实现发送数据
-        mBluetoothLeService.writeCharacteristic(target_chara);
-        //broadcastUpdate(BluetoothLeService.SEND_DATA,send_et.getText().toString());
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    private void broadcastUpdate(final String action,String todo)
+    @Override
+    public void onDestroy()
     {
-        final Intent intent = new Intent(action);
-        intent.putExtra("todo",todo);
-        sendBroadcast(intent);
+        super.onDestroy();
+        //解除广播接收器
+        unregisterReceiver(mGattUpdateReceiver);
+        mBluetoothLeService = null;
+    }
+
+    private  void sendMessage(String test){
+        if (target_chara!=null){
+            target_chara.setValue(test);
+            mBluetoothLeService.writeCharacteristic(target_chara);
+        }else {
+            System.out.print("target_chara为空！！！！");
+        }
     }
 
 

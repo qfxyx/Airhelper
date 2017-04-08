@@ -14,10 +14,12 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import java.util.ArrayList;
@@ -44,6 +46,18 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String SEND_DATA=("com.example.bluetooth.le.SEND_DATA");
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId){
+        int retVal = super.onStartCommand(intent, flags, startId);
+        String address = intent.getStringExtra("address") ;
+       if (initialize()){
+            connect(address);
+        }
+        return retVal;
+
+    }
 
     /* 连接远程设备的回调函数 */
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback()
@@ -128,7 +142,7 @@ public class BluetoothLeService extends Service {
 
             Log.w(TAG, "--onCharacteristicWrite--: " + status);
             // 以下语句实现 发送完数据或也显示到界面上
-            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+           // broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
         /*
          * 读描述值
@@ -227,6 +241,7 @@ public class BluetoothLeService extends Service {
     @Override
     public IBinder onBind(Intent intent)
     {
+        System.out.println("蓝牙服务类已启动！");
         return mBinder;
     }
 
@@ -312,6 +327,7 @@ public class BluetoothLeService extends Service {
 		/* 获取远端的蓝牙设备 */
         final BluetoothDevice device = mBluetoothAdapter
                 .getRemoteDevice(address);
+        System.out.println("蓝牙服务类连接地址："+address);
         if (device == null)
         {
             Log.w(TAG, "Device not found.  Unable to connect.");
@@ -509,5 +525,6 @@ public class BluetoothLeService extends Service {
         return mBluetoothGatt.getServices();
 
     }
+
 
 }
