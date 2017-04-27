@@ -73,6 +73,7 @@ public class BluetoothLeService extends Service {
                 mConnectionState = STATE_CONNECTED;
 				/* 通过广播更新连接状态 */
                 broadcastUpdate(intentAction);
+
                 Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
                 Log.i(TAG, "Attempting to start service discovery:"

@@ -1,6 +1,9 @@
 package com.air2016jnu.airhelper.views;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.drawable.Drawable;
@@ -9,6 +12,8 @@ import android.view.LayoutInflater;
 import android.widget.LinearLayout;
 
 import com.air2016jnu.airhelper.R;
+import com.air2016jnu.airhelper.data.MyApplication;
+import com.air2016jnu.airhelper.service.BluetoothLeService;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Description;
@@ -22,6 +27,7 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Administrator on 2017/4/4.
@@ -30,23 +36,23 @@ public class MyLineChart extends LinearLayout {
 
     LineChart mChart;
     LineDataSet set1;
+
     public MyLineChart(Context context, AttributeSet attributeSet){
         super(context,attributeSet);
         LayoutInflater.from(context).inflate(R.layout.line_chart,this);
         mChart = (LineChart)findViewById(R.id.line_chart);
 
+
     }
-    public void setData(float[] xData,float[] yData,String chartDes) {
+    public void setData(List<Float> xData, List<Float> yData, String chartDes) {
 
         ArrayList<Entry> values = new ArrayList<Entry>();
-        if (xData.length!=yData.length){
+        if (xData.size()!=yData.size()){
             return;
         }
-        for (int i = 0; i < xData.length; i++) {
-            values.add(new Entry( xData[i],yData[i]));
+        for (int i = 0; i < xData.size(); i++) {
+            values.add(new Entry( xData.get(i),yData.get(i)));
         }
-
-
 
         if (mChart.getData() != null &&
                 mChart.getData().getDataSetCount() > 0) {
@@ -91,16 +97,17 @@ public class MyLineChart extends LinearLayout {
         }
     }
 
-    public void setxTags(final String[] tags){
-        if (tags==null){
-            return;
-        }
+    public void setxTags(final List<String> tags,final List<Float> xData){
 
         IAxisValueFormatter formatter = new IAxisValueFormatter() {
 
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
-                return tags[(int) value];
+                float temp = xData.get(0);
+
+                    return tags.get((int)(value-temp));
+
+
             }
 
             // we don't draw numbers, so no decimal digits needed
@@ -197,9 +204,19 @@ public class MyLineChart extends LinearLayout {
     public void  setChartBackgroudColor(int color){
         mChart.setBackgroundColor(color);
     }
-
     public void setChartDescription(Description description){
         mChart.setDescription(description);
     }
+    public void sendBroadcastForData(String command){
+        Intent intent = new Intent(BluetoothLeService.SEND_DATA);
+        intent.putExtra("sendToBle",command);
+        MyApplication.getContext().sendBroadcast(intent);
+    }
+    public void updateChart(){
+        mChart.notifyDataSetChanged();
+    }
+
+
+
 
 }

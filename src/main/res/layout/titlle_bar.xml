@@ -7,6 +7,7 @@
     android:background="#4169E1">
     <Button
         android:id="@+id/title_bar_btn_l"
+        android:background="@drawable/title_back"
         android:layout_weight="5"
         android:layout_width="match_parent"
         android:layout_height="40dp" />
@@ -20,6 +21,7 @@
 
     <Button
         android:id="@+id/title_bar_btn_r"
+        android:background="@drawable/title_more"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_weight="5"/>

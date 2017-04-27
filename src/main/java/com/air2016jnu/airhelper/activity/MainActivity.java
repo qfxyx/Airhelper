@@ -29,12 +29,15 @@ import com.air2016jnu.airhelper.R;
 import com.air2016jnu.airhelper.data.ConfigurationHelper;
 import com.air2016jnu.airhelper.data.Info;
 import com.air2016jnu.airhelper.data.URLData;
+import com.air2016jnu.airhelper.entity.AllEntity;
 import com.air2016jnu.airhelper.service.BluetoothLeService;
 import com.air2016jnu.airhelper.service.ExcuteBluetoothService;
 import com.air2016jnu.airhelper.utils.HttpWeather;
+import com.google.gson.Gson;
 
 import org.w3c.dom.Text;
 
+import java.lang.reflect.Method;
 import java.util.Calendar;
 import java.util.Random;
 
@@ -52,6 +55,14 @@ public class MainActivity extends AppCompatActivity
     // 蓝牙扫描时间
     private static final long SCAN_PERIOD = 10000;
     private int tipsControl = 0;
+
+    //显示数据字段
+    String updateTime="";
+    String humi="";
+    String dust="";
+    String ch2o="";
+    String temp="";
+    boolean dataFlag = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +86,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        setIconEnable(menu,true);
         return true;
     }
 
@@ -105,10 +117,10 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.tem_condition) {
             startActivity(new Intent(MainActivity.this,TemperatureActivity.class));
         } else if (id == R.id.humidity_condition) {
-
+            startActivity(new Intent(MainActivity.this,HumiActivity.class));
 
         } else if (id == R.id.dust_condition) {
-
+           startActivity(new Intent(MainActivity.this,DustActivity.class));
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_help) {
@@ -130,9 +142,13 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(BluetoothLeService.SEND_DATA);
-                intent.putExtra("sendToBle","#H");
-               sendBroadcast(intent);
+                if (ExcuteBluetoothService.isConnected){
+                    sendBroadcastForData(Info.commandAllnow);
+                    tView.setText("\n\n数据更新中...");
+                }else {
+                    showTips("蓝牙尚未连接或连接已断开！",Toast.LENGTH_SHORT);
+                }
+
             }
         });
 
@@ -145,6 +161,8 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         tView=(TextView)findViewById(R.id.temperature);
+        tView.setText((new ConfigurationHelper(this,Info.bleBackDataKey).getString(Info.bleNowKey,"")));
+        setNavBarDate();
     }
     private void initAppData(){
         HttpWeather weather = new HttpWeather(Info.getUserCity(), URLData.getWeather());
@@ -157,8 +175,8 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    /*
-    private void setDate(){
+
+    private void setNavBarDate(){
         Calendar calendar =Calendar.getInstance();
         int date =calendar.get(Calendar.DATE);
         int month= calendar.get(Calendar.MONTH)+1;
@@ -196,6 +214,7 @@ public class MainActivity extends AppCompatActivity
 
 
     }
+    /*
     private void setTemperture(){
         int temperture =random.nextInt(15)+20;
         int humitity = random.nextInt(10)+50;
@@ -261,16 +280,22 @@ public class MainActivity extends AppCompatActivity
             System.out.println("Address:" + device.getAddress());
             System.out.println("Name:" + device.getName());
             System.out.println("rssi:" + rssi);
-
+            if (device==null){
+                return;
+            }
+            if (device.getName()==null){
+                return;
+            }
             if (device.getName().equals(targetBleName)){
                 bleName = device.getName();
                 bleAddress = device.getAddress();
                 Intent intent = new Intent(MainActivity.this, ExcuteBluetoothService.class);
                 intent.putExtra("address",bleAddress);
                 System.out.println("发现目标设备，尝试进行自动连接");
-                startService(intent);
+
                 if (tipsControl==0){
                     showTips("发现目标设备，尝试进行自动连接",Toast.LENGTH_SHORT);
+                    startService(intent);
                 }
                 tipsControl++;
 
@@ -289,7 +314,7 @@ public class MainActivity extends AppCompatActivity
                     Log.i("SCAN", "stop.....................");
                     Log.i("stopExcute", "stop.........stop............");
                     if (bleName.isEmpty()|bleName.equals("")){
-                      //  showTips("没有扫描到设备，请点击右上角进入手动扫描页面",Toast.LENGTH_LONG);
+                        //showTips("没有扫描到设备，请点击右上角进入手动扫描页面",Toast.LENGTH_LONG);
                     }
                     mBluetoothAdapter.stopLeScan(mLeScanCallback);
                 }
@@ -313,9 +338,16 @@ public class MainActivity extends AppCompatActivity
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action))//Gatt连接成功
             {
+                tView.setText("\n\n数据更新中...");
+               mHandler.postDelayed(new Runnable() {
+                   @Override
+                   public void run() {
+                       sendBroadcastForData(Info.commandAllnow);
 
+                   }
+               },3000);
                 //更新连接状态
-                //updateConnectionState(status);
+                showTips("连接成功",Toast.LENGTH_SHORT);
                 System.out.println("BroadcastReceiver :" + "device connected");
 
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED//Gatt连接失败
@@ -334,8 +366,24 @@ public class MainActivity extends AppCompatActivity
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action))//有效数据
             {
                 //处理发送过来的数据
-                showString=showString+intent.getExtras().getString(BluetoothLeService.EXTRA_DATA);
-                tView.setText(showString);
+                String data =intent.getExtras().getString(BluetoothLeService.EXTRA_DATA);
+                if (data.startsWith("*")){
+                    dataFlag=true;
+                    showString="";
+                    System.out.printf("data coming ----------------"+ data);
+                    showString=showString+data.replace("*","");
+
+                }else if (data.endsWith("!")){
+                    showString=showString+data.replace("!","");
+                    dataFlag=false;
+                    showData(showString);
+
+
+
+                }else if (dataFlag){
+                    showString=showString+data;
+                }
+
 
             }
         }
@@ -357,5 +405,43 @@ public class MainActivity extends AppCompatActivity
         super.onDestroy();
         unregisterReceiver(mGattUpdateReceiver);
     }
+    private  void sendBroadcastForData(String command){
+        Intent intent = new Intent(BluetoothLeService.SEND_DATA);
+        intent.putExtra("sendToBle",command);
+        sendBroadcast(intent);
+    }
+    private void setIconEnable(Menu menu, boolean enable)
+    {
+        try
+        {
+            Class<?> clazz = Class.forName("com.android.internal.view.menu.MenuBuilder");
+            Method m = clazz.getDeclaredMethod("setOptionalIconsVisible", boolean.class);
+            m.setAccessible(true);
 
+            //MenuBuilder实现Menu接口，创建菜单时，传进来的menu其实就是MenuBuilder对象(java的多态特征)
+            m.invoke(menu, enable);
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+    private AllEntity getAllEntity(String json){
+        AllEntity allEntity ;
+        Gson gson = new Gson();
+        allEntity = gson.fromJson(json,AllEntity.class);
+        return  allEntity;
+    }
+    private void showData(String json){
+        AllEntity allEntity = getAllEntity(json);
+        updateTime = allEntity.getUpdateTime();
+        temp =allEntity.getAll().getTemp();
+        dust=allEntity.getAll().getDust();
+        ch2o=allEntity.getAll().getCH2O();
+        humi=allEntity.getAll().getHumi();
+        String show="\n温  度: "+temp+"\n粉尘浓度: "+dust+"\n甲醛浓度: "+ch2o+"\n湿  度: "+humi+"\n更新于 : "+updateTime;
+        (new ConfigurationHelper(this,Info.bleBackDataKey)).setString(Info.bleNowKey,show);
+        tView.setText(show);
+
+    }
 }

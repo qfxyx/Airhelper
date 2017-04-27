@@ -3,21 +3,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="5dp"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
     android:orientation="vertical"
     tools:context="com.air2016jnu.airhelper.activity.TemperatureActivity">
-
-    <include
-        layout="@layout/analysis_commom_part"
+    <Button
+        android:id="@+id/dust_update_button"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
+        android:layout_height="30dp"
+        android:textSize="10sp"
+        android:text="点击更新"/>
     <ScrollView
         android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <com.air2016jnu.airhelper.views.MyLineChart
-            android:id="@+id/tem_lineChart"
+            android:id="@+id/dust_lineChart"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 

@@ -4,23 +4,23 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/air_condition"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@drawable/w502"
             android:title="空气质量分析" />
         <item
             android:id="@+id/tem_condition"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@drawable/w900"
             android:title="温度分析" />
         <item
             android:id="@+id/humidity_condition"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@drawable/w405"
             android:title="湿度分析" />
         <item
             android:id="@+id/dust_condition"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@drawable/w504"
             android:title="粉尘密度" />
         <item
             android:id="@+id/weather_condition"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@drawable/w100"
             android:title="在线天气" />
     </group>
 
@@ -28,11 +28,11 @@
         <menu>
             <item
                 android:id="@+id/nav_share"
-                android:icon="@mipmap/ic_launcher"
+                android:icon="@drawable/ic_menu_share"
                 android:title="分享" />
             <item
                 android:id="@+id/nav_help"
-                android:icon="@mipmap/ic_launcher"
+                android:icon="@drawable/ic_menu_manage"
                 android:title="帮助" />
         </menu>
     </item>

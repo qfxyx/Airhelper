@@ -3,6 +3,9 @@ package com.air2016jnu.airhelper.data;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Administrator on 2016/12/7.
  */
@@ -35,5 +38,22 @@ public class ConfigurationHelper {
     public void setBoolean(String key,Boolean value){
         editor.putBoolean(key,value);
         editor.commit();
+    }
+    public void setFloatList(String key,List<Float> list,int num){
+        if (num!=list.size()){
+            return;
+        }
+        for (int i =0; i<list.size();i++){
+            editor.putFloat(key+i,list.get(i));
+            editor.commit();
+        }
+    }
+
+    public List<Float> getFloatList(String key,int num){
+        List<Float> list = new ArrayList<>();
+        for (int i=0;i<num;i++){
+            list.add(preferences.getFloat(key+i,0f));
+        }
+        return list;
     }
 }

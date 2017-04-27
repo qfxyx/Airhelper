@@ -30,7 +30,7 @@ public class ExcuteBluetoothService extends Service {
     public static String EXTRAS_DEVICE_RSSI = "RSSI";
 
     //蓝牙连接状态
-    private boolean mConnected = false;
+    public static boolean isConnected = false;
     private String status = "disconnected";
     //蓝牙名字
     private String mDeviceName;
@@ -110,7 +110,7 @@ public class ExcuteBluetoothService extends Service {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action))//Gatt连接成功
             {
-                mConnected = true;
+                isConnected = true;
                 status = "connected";
                 //更新连接状态
                 //updateConnectionState(status);
@@ -119,7 +119,7 @@ public class ExcuteBluetoothService extends Service {
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED//Gatt连接失败
                     .equals(action))
             {
-                mConnected = false;
+                isConnected = false;
                 status = "disconnected";
                 //更新连接状态
                 // updateConnectionState(status);

@@ -133,8 +133,8 @@ public class WeatherActivity extends BaseActivity{
     }
     private void initDatas(){
 
-       icons= new int[]{R.mipmap.ic_launcher, R.mipmap.ic_launcher,
-               R.mipmap.ic_launcher, R.mipmap.ic_launcher};
+       icons= new int[]{R.drawable.wea_fore, R.drawable.wea_now,
+               R.drawable.wea_life, R.drawable.wea_air};
         iconNames=new String[]{"天气预报","实时天气","生活指数","空气指数"};
         gridViewList=new ArrayList<>();
         for (int i=0;i<iconNames.length;i++) {
