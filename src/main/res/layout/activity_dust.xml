@@ -3,18 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:padding="5dp"
     android:orientation="vertical"
-    tools:context="com.air2016jnu.airhelper.activity.TemperatureActivity">
-    <Button
-        android:id="@+id/dust_update_button"
-        android:layout_width="wrap_content"
-        android:layout_height="30dp"
-        android:textSize="10sp"
-        android:text="点击更新"/>
+    tools:context="com.air2016jnu.airhelper.activity.DustActivity">
+
+    <include
+       layout="@layout/analysis_commom_part"
+       android:layout_height="wrap_content"
+       android:layout_width="wrap_content" />
+
     <ScrollView
         android:layout_marginTop="10dp"
         android:layout_width="match_parent"

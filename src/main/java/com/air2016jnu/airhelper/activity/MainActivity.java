@@ -30,6 +30,7 @@ import com.air2016jnu.airhelper.data.ConfigurationHelper;
 import com.air2016jnu.airhelper.data.Info;
 import com.air2016jnu.airhelper.data.URLData;
 import com.air2016jnu.airhelper.entity.AllEntity;
+import com.air2016jnu.airhelper.entity.OutEntity;
 import com.air2016jnu.airhelper.service.BluetoothLeService;
 import com.air2016jnu.airhelper.service.ExcuteBluetoothService;
 import com.air2016jnu.airhelper.utils.HttpWeather;
@@ -43,8 +44,8 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-    Random random = new Random();
     TextView tView ;
+    TextView outView;
     private String bleName="" ;
     private String bleAddress="" ;
     private String targetBleName = "BT05";
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity
     String dust="";
     String ch2o="";
     String temp="";
+    String outData="";
     boolean dataFlag = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,10 +123,9 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.dust_condition) {
            startActivity(new Intent(MainActivity.this,DustActivity.class));
-        } else if (id == R.id.nav_share) {
-
+        } else if (id == R.id.nav_share) {sendShare();
         } else if (id == R.id.nav_help) {
-
+            startActivity(new Intent(this,HelpActivity.class));
         } else if (id==R.id.weather_condition){
             startActivity(new Intent(MainActivity.this,WeatherActivity.class));
         }
@@ -162,6 +163,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         tView=(TextView)findViewById(R.id.temperature);
         tView.setText((new ConfigurationHelper(this,Info.bleBackDataKey).getString(Info.bleNowKey,"")));
+        outView =(TextView)findViewById(R.id.out_data);
+        outView.setText(new ConfigurationHelper(this,Info.bleBackDataKey).getString(Info.bleOutKey,""));
         setNavBarDate();
     }
     private void initAppData(){
@@ -214,35 +217,6 @@ public class MainActivity extends AppCompatActivity
 
 
     }
-    /*
-    private void setTemperture(){
-        int temperture =random.nextInt(15)+20;
-        int humitity = random.nextInt(10)+50;
-        int qualityChoose = random.nextInt(5);
-        String quality ="";
-        switch (qualityChoose){
-            case 1:
-                quality="极好";
-                break;
-            case 2:
-                quality="较好";
-                break;
-            case 3:
-                quality="一般";
-                break;
-            case 4:
-                quality="较差";
-                break;
-            case 5:
-                quality="极差";
-            default:
-                quality="较好";
-        }
-        String res = "温度："+temperture+"℃\n"+"湿度："+humitity+"%\n"+"空气质量："
-                +quality;
-        tView.setText(res);
-
-    } */
 
     private boolean initBle(){
         // 手机硬件支持蓝牙
@@ -439,9 +413,31 @@ public class MainActivity extends AppCompatActivity
         dust=allEntity.getAll().getDust();
         ch2o=allEntity.getAll().getCH2O();
         humi=allEntity.getAll().getHumi();
-        String show="\n温  度: "+temp+"\n粉尘浓度: "+dust+"\n甲醛浓度: "+ch2o+"\n湿  度: "+humi+"\n更新于 : "+updateTime;
+        outData=allEntity.getOut();
+        String show="\n温  度: "+temp+"°C\n粉尘浓度: "+dust+"\n甲醛浓度: "+ch2o+"\n湿  度: "+humi+"\n更新于 : "+updateTime;
         (new ConfigurationHelper(this,Info.bleBackDataKey)).setString(Info.bleNowKey,show);
         tView.setText(show);
+        outView.setText(outData);
+        if (!outData.contains("#")){
+            String[] outS = outData.split("_");
+            if (outS.length==3){
+                String outTemp  = outS[0];
+                String outDust  = outS[2];
+                String outHumi  = outS[1];
+                String outString = "\n温度："+outTemp+"°C\n粉尘浓度："+outDust+"\n"+"湿度："+outHumi;
+                outView.setText(outString);
+                new ConfigurationHelper(this,Info.bleBackDataKey).setString(Info.bleOutKey,outString);
+            }
+        }else {
+            outView.setText("获取室外数据错误，请检查检测装置...");
+        }
 
+    }
+    private void sendShare(){
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_SUBJECT, "分享");
+        intent.putExtra(Intent.EXTRA_TEXT, "你好，这是智能空气检测仪检测到的当前环境的最新数据：\n"+tView.getText());
+        startActivity(Intent.createChooser(intent, "分享到"));
     }
 }

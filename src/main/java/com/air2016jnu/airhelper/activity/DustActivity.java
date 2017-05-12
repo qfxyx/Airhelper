@@ -4,19 +4,20 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.v7.app.AppCompatActivity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
-
 import com.air2016jnu.airhelper.R;
 import com.air2016jnu.airhelper.data.ConfigurationHelper;
 import com.air2016jnu.airhelper.data.Info;
 import com.air2016jnu.airhelper.entity.DustEntity;
-import com.air2016jnu.airhelper.entity.TempEntity;
 import com.air2016jnu.airhelper.service.BluetoothLeService;
 import com.air2016jnu.airhelper.service.ExcuteBluetoothService;
+import com.air2016jnu.airhelper.utils.BackButtonAction;
+import com.air2016jnu.airhelper.utils.ConmonUtils;
 import com.air2016jnu.airhelper.views.MyLineChart;
 import com.google.gson.Gson;
 
@@ -33,6 +34,11 @@ public class DustActivity extends BaseActivity {
     private String dataType;
     private String nowDust;
     private ConfigurationHelper helper;
+    private boolean initDataIsOK = false;
+    TextView nowTextTv ;
+    TextView updateTimeTv;
+    TextView updateTipTv;
+    ImageButton updateBtn;
     @Override
     public void onBaseCreate(Bundle bundle){
         setContentViewBody(R.layout.activity_dust);
@@ -43,41 +49,40 @@ public class DustActivity extends BaseActivity {
     }
     private void initData(){
         helper = new ConfigurationHelper(DustActivity.this, Info.bleBackDataKey);
-        xData  = helper.getFloatList(Info.bleTempKeyX,13);
-        yData  = helper.getFloatList(Info.bleTempKeyY,13);
-        if(isDataOk(xData,yData)){
-            dealXYData(xData,yData,xTas);
+        xData  = helper.getFloatList(Info.bleDustKeyX,13);
+        yData  = helper.getFloatList(Info.bleDustKeyY,13);
+        if(ConmonUtils.isDataOk(xData,yData)){
+            ConmonUtils.dealXYData(xData,yData,xTas);
+            initDataIsOK=true;
         }
-        /*
-        int iTemp = (new Random()).nextInt(23);
-        for (int i = iTemp;i<iTemp+13;i++){
-            xData.add((float)i%24);
-            yData.add((float)(new Random()).nextInt(100));
-        }
-        dealXYData(xData,yData,xTas);
-        for (String s:xTas){
-            //System.out.println();
-            System.out.println(s);
-        }
-        */
-
+        setlBtnActionAction(new BackButtonAction(DustActivity.this));
+        setActivityTitle("粉尘浓度");
 
     }
     private void initView(){
+        nowTextTv =(TextView)findViewById(R.id.analysis_now);
+        updateTimeTv=(TextView)findViewById(R.id.analysis_update_time);
+        updateTipTv =(TextView)findViewById(R.id.analysis_tips);
         myLineChart = (MyLineChart)findViewById(R.id.dust_lineChart);
-       if (isDataOk(xData,yData)){
-           myLineChart.setData(xData,yData,"dust");
-           myLineChart.setxTags(xTas,xData);
-       }
+        if (initDataIsOK){
+            myLineChart.setData(xData,yData,"过去十二小时粉尘浓度变化表");
+            myLineChart.setxTags(xTas,xData);
+            nowTextTv.setText(helper.getString(Info.bleDustNow,"暂无"));
+            updateTimeTv.setText(helper.getString(Info.bleDustUpdate,"暂无"));
+        }
+
         myLineChart.setYDescription("变化趋势");
+        myLineChart.setDatasetFillColor(Color.rgb(21,212,202));
         myLineChart.showChart();
-        Button updateBtn = (Button)findViewById(R.id.dust_update_button);
+        updateBtn = (ImageButton)findViewById(R.id.analysis_sync_btn);
         updateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dust="";
                 if (ExcuteBluetoothService.isConnected){
-                    sendBroadcastForData(Info.commandDust);
+                    ConmonUtils.sendBroadcastForData(DustActivity.this,Info.commandDust);
+                    updateBtn.setVisibility(View.INVISIBLE);
+                    updateTipTv.setText("更新中...");
                 }else {
                     Toast.makeText(DustActivity.this,"蓝牙未连接或已断开",Toast.LENGTH_SHORT).show();
                 }
@@ -122,19 +127,7 @@ public class DustActivity extends BaseActivity {
 
                 }else if (data.endsWith("#")){
                     dust=dust+data.replace("#","");
-                    try {
-                        parseData(dust);
-                        dealXYData(xData,yData,xTas);
-                        myLineChart.setData(xData,yData,updateTime);
-                        myLineChart.updateChart();
-                        helper.setFloatList(Info.bleTempKeyX,xData,13);
-                        helper.setFloatList(Info.bleTempKeyY,yData,13);
-                    }catch (Exception ex){
-                        ex.printStackTrace();
-                        Toast.makeText(DustActivity.this,"检测仪返回数据有误",Toast.LENGTH_SHORT);
-
-                    }
-
+                    refleshChart(dust);
 
                 }else {
                     dust=dust+data;
@@ -162,40 +155,6 @@ public class DustActivity extends BaseActivity {
         unregisterReceiver(mGattUpdateReceiver);
     }
 
-    private void dealXYData(List<Float> xData,List<Float> yData,List<String> xTas){
-        float[] tempData = new float[xData.size()];
-        int flag = Integer.MAX_VALUE;
-        for (int i = 0;i<xData.size()-1;i++){
-            if (xData.get(i)>xData.get(i+1)){
-                flag=i+1;
-                tempData[i]=xData.get(i);
-                for (int j=flag;j<xData.size();j++){
-                    tempData[j] = xData.get(j)+24;
-                }
-                break;
-            }
-            tempData[i] = xData.get(i);
-        }
-        if (flag!=Integer.MAX_VALUE){
-            xData.clear();
-            for (int i = 0;i<tempData.length;i++){
-                xData.add(tempData[i]);
-            }
-        }
-
-        if (flag!=Integer.MAX_VALUE){
-            for (int i=0;i<flag;i++){
-                xTas.add((int)((float)xData.get(i))+"时");
-            }
-            for (int i =flag;i<xData.size();i++){
-                xTas.add((int)((float)xData.get(i))%24+"时");
-            }
-        }else {
-            for (int i=0;i<xData.size();i++){
-                xTas.add((int)((float)xData.get(i))+"时");
-            }
-        }
-    }
 
     private void parseData(String json){
         DustEntity dustEntity;
@@ -214,37 +173,38 @@ public class DustActivity extends BaseActivity {
     }
 
 
-    //this method needs to be tested
-    private boolean isDataOk(List<Float> x,List<Float> y){
-        if (x.size()!=y.size()&&x.size()!=13){
-            return false;
-        }
-        int numBreak = Integer.MAX_VALUE;
-        for (int i=0;i<x.size()-1;i++){
-            if (x.get(i+1)-x.get(i)!=1){
-                if (x.get(i+1)==0){
-                    numBreak = i+1;
-                    break;
-                }else {
-                    return false;
-                }
+    private void refleshChart(String json){
+        try {
+            parseData(json);
+            ConmonUtils.reverseList(xData);
+            ConmonUtils.reverseList(yData);
+            updateBtn.setVisibility(View.VISIBLE);
+            updateTipTv.setText("");
+            if (ConmonUtils.isDataOk(xData,yData)){
+                helper.setFloatList(Info.bleDustKeyX,xData,13);
+                ConmonUtils.dealXYData(xData,yData,xTas);
+                myLineChart.setData(xData,yData,updateTime);
+                myLineChart.setxTags(xTas,xData);
+                myLineChart.updateChart();
+                updateTimeTv.setText(updateTime);
+                nowTextTv.setText(nowDust);
+
+                helper.setFloatList(Info.bleDustKeyY,yData,13);
+                helper.setString(Info.bleDustUpdate,updateTime);
+                helper.setString(Info.bleDustNow,nowDust);
+            }else {
+                ConmonUtils.ShowToast(DustActivity.this,"检测仪返回数据有误",Toast.LENGTH_SHORT);
             }
-        }
-        if (numBreak!=Integer.MAX_VALUE){
-            for (int i=numBreak;i<x.size()-1;i++){
-                if ((x.get(i+1)-x.get(i))!=1){
-                    return false;
-                }
-            }
+
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+            Toast.makeText(DustActivity.this,"检测仪返回数据有误",Toast.LENGTH_SHORT);
+            updateBtn.setVisibility(View.VISIBLE);
+            updateTipTv.setText("");
+
         }
 
-        return true ;
-    }
-
-    private  void sendBroadcastForData(String command){
-        Intent intent = new Intent(BluetoothLeService.SEND_DATA);
-        intent.putExtra("sendToBle",command);
-        sendBroadcast(intent);
     }
 
 }

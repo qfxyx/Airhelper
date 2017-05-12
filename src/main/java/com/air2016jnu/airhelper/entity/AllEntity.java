@@ -6,14 +6,17 @@ package com.air2016jnu.airhelper.entity;
 
 public class AllEntity {
 
+
     /**
      * type : All
-     * All : {"Temp":"26.0","Humi":"73.0","Dust":"0.002739","CH2O":"254"}
-     * updateTime : 23:59
+     * All : {"Temp":"26.0","Humi":"86.0","Dust":"0.835796","CH2O":"34"}
+     * Out : #
+     * updateTime : 2017-05-02 23:42
      */
 
     private String type;
     private AllBean All;
+    private String Out;
     private String updateTime;
 
     public String getType() {
@@ -32,6 +35,14 @@ public class AllEntity {
         this.All = All;
     }
 
+    public String getOut() {
+        return Out;
+    }
+
+    public void setOut(String Out) {
+        this.Out = Out;
+    }
+
     public String getUpdateTime() {
         return updateTime;
     }
@@ -43,9 +54,9 @@ public class AllEntity {
     public static class AllBean {
         /**
          * Temp : 26.0
-         * Humi : 73.0
-         * Dust : 0.002739
-         * CH2O : 254
+         * Humi : 86.0
+         * Dust : 0.835796
+         * CH2O : 34
          */
 
         private String Temp;

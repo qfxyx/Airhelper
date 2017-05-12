@@ -14,6 +14,7 @@ import com.air2016jnu.airhelper.data.Info;
 import com.air2016jnu.airhelper.entity.TempEntity;
 import com.air2016jnu.airhelper.service.BluetoothLeService;
 import com.air2016jnu.airhelper.service.ExcuteBluetoothService;
+import com.air2016jnu.airhelper.utils.BackButtonAction;
 import com.air2016jnu.airhelper.utils.ConmonUtils;
 import com.air2016jnu.airhelper.views.MyLineChart;
 import com.google.gson.Gson;
@@ -54,12 +55,14 @@ public class TemperatureActivity extends BaseActivity {
             initDataIsOK =true;
         }
 
+
     }
     private void initView(){
         nowTextTv =(TextView)findViewById(R.id.analysis_now);
         updateTimeTv=(TextView)findViewById(R.id.analysis_update_time);
         updateTipTv =(TextView)findViewById(R.id.analysis_tips);
-
+        setlBtnActionAction(new BackButtonAction(TemperatureActivity.this));
+        setActivityTitle("温度变化");
         myLineChart = (MyLineChart)findViewById(R.id.tem_lineChart);
         if (initDataIsOK){
             myLineChart.setData(xData,yData,"过去十二小时温度变化表");
@@ -176,12 +179,14 @@ public class TemperatureActivity extends BaseActivity {
             updateBtn.setVisibility(View.VISIBLE);
             updateTipTv.setText("");
             if (ConmonUtils.isDataOk(xData,yData)){
-                ConmonUtils.dealXYData(xData,yData,xTas);
-                myLineChart.setData(xData,yData,updateTime);
-                myLineChart.updateChart();
-                updateTimeTv.setText(updateTime);
-                nowTextTv.setText(nowTemp);
+                //先存x的数据，因为接下来还会对其修改
                 helper.setFloatList(Info.bleTempKeyX,xData,13);
+                ConmonUtils.dealXYData(xData,yData,xTas);
+                myLineChart.setData(xData,yData,"过去十二小时温度变化表");
+                myLineChart.updateChart();
+                myLineChart.setxTags(xTas,xData);
+                updateTimeTv.setText(updateTime);
+                nowTextTv.setText(nowTemp+"°C");
                 helper.setFloatList(Info.bleTempKeyY,yData,13);
                 helper.setString(Info.bleTempUpdate,updateTime);
                 helper.setString(Info.bleTempNow,nowTemp);

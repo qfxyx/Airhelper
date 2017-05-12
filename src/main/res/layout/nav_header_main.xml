@@ -59,6 +59,6 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="暨南大学2016年创新工程项目" />
+        android:text="暨南大学2017年本科毕业设计项目" />
 
 </LinearLayout>

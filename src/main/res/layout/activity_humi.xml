@@ -1,9 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="5dp"
+    android:orientation="vertical"
     tools:context="com.air2016jnu.airhelper.activity.HumiActivity">
+    <include
+        layout="@layout/analysis_commom_part"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content" />
 
-</android.support.constraint.ConstraintLayout>
+    <ScrollView
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <com.air2016jnu.airhelper.views.MyLineChart
+            android:id="@+id/humi_lineChart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </com.air2016jnu.airhelper.views.MyLineChart>
+
+    </ScrollView>
+
+
+
+</LinearLayout>

@@ -2,22 +2,24 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/air_condition"
-            android:icon="@drawable/w502"
-            android:title="空气质量分析" />
+
         <item
             android:id="@+id/tem_condition"
             android:icon="@drawable/w900"
-            android:title="温度分析" />
+            android:title="温度变化" />
         <item
             android:id="@+id/humidity_condition"
             android:icon="@drawable/w405"
-            android:title="湿度分析" />
+            android:title="湿度变化" />
+        <item
+            android:id="@+id/air_condition"
+            android:icon="@drawable/w502"
+            android:title="甲醛浓度变化" />
+
         <item
             android:id="@+id/dust_condition"
             android:icon="@drawable/w504"
-            android:title="粉尘密度" />
+            android:title="粉尘密度变化" />
         <item
             android:id="@+id/weather_condition"
             android:icon="@drawable/w100"

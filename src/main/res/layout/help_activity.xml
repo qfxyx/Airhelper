@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:padding="5dp"
+    android:layout_height="match_parent">
+
+
+    <TextView
+        android:background="#FFFFF0"
+        android:gravity="center"
+        android:textColor="#0000CD"
+        android:textSize="20sp"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="软件使用"/>
+    <TextView
+        android:background="#F7F7F7"
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="（1）本软件是通过蓝牙4.0协议与空气检测仪进行通信，因此使用本软件需要你的手机支持BLE且开放蓝牙权限。"/>
+    <TextView
+        android:background="#F7F7F7"
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="（2）软件提供了丰富的图表来展示过去12小时内数据的变化趋势，进入页面后默认展示最近一次更新的数据，需要显示最新结果点击更新按钮即可。"/>
+
+    <TextView
+        android:background="#F7F7F7"
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="（3）软件提供了在线天气的功能，以供客户在没有连上空气检测仪时也能得到一些天气已经空气信息。"/>
+
+    <TextView
+        android:background="#FFFFF0"
+        android:gravity="center"
+        android:textColor="#0000CD"
+        android:textSize="20sp"
+        android:layout_marginTop="15dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="软件信息"/>
+
+    <TextView
+        android:textSize="15sp"
+        android:background="#F7F7F7"
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="版本号：1.0"/>
+    <TextView
+        android:textSize="15sp"
+        android:background="#F7F7F7"
+        android:layout_marginTop="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="联系我们：6455989@qq.com"/>
+
+
+
+</LinearLayout>

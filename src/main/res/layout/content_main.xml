@@ -8,16 +8,44 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     android:background="@drawable/man_background"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".activity.MainActivity"
     tools:showIn="@layout/app_bar_main">
 
     <TextView
+        android:textColor="#0000FF"
+        android:gravity="center"
+        android:id="@+id/main_tip1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="室内检测数据\n-------------------------------------------------"/>
+    <TextView
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/main_tip1"
         android:id="@+id/temperature"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="20sp"
         android:text="欢迎使用智能空气检测仪！"
          />
+    <TextView
+        android:layout_marginTop="30dp"
+        android:layout_below="@id/temperature"
+        android:textColor="#FF00FF"
+        android:gravity="center"
+        android:id="@+id/main_tip2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="室外检测数据\n-------------------------------------------------"/>
+    <TextView
+        android:textSize="15sp"
+        android:text="外部数据"
+        android:textColor="#000"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/main_tip2"
+        android:id="@+id/out_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </RelativeLayout>
